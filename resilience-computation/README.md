@@ -102,7 +102,7 @@ Below is a variant of the command that calculates resilience considering only th
 
 ```
 mkdir ../output/webserver_realworld_rpki
-python3 simulate.py -s ../data/sim_json/sim_output_k100_rpki.json -o ../data/ocids/origin-class-ids-2022-03-15.csv  -l ../data/domains/ -O ../output/webserver_realworld_rpki
+python3 resilience.py -s ../data/sim_json/sim_output_k100_rpki.json -o ../data/ocids/origin-class-ids-2022-03-15.csv  -l ../data/domains/ -O ../output/webserver_realworld_rpki
 ```
 
 For convenience and comparative purposes, we provide the output of the above two resilience simulations regimes in ```data/output_groundtruth```.
