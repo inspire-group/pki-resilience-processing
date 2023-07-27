@@ -5,9 +5,8 @@ Calculate resilience of domain names under a range of potential multiVA deployme
 The resilience code can be evaluated by running .
 There are two main steps: (1) run ```resilience.py``` to combine Internet topology simulation results with DNS lookup data to compute resilience values for domain names; (2) run ```analyze_results.py``` to summarize and print results across classes of quorum policies/vantage point sets.
 
-## An overview of simulate.py
-resilience.py 
-simulate.py performs an interdomain Internet topology simulation based on the "routing tree" algorithm discussed in "Modeling on quicksand: dealing with the scarcity of ground truth in interdomain routing data" (https://dl.acm.org/doi/10.1145/2096149.2096155). Running ```python3 simulate.py -h``` (from the code directory; all python commands are intended to be executed from the code directory) gives the help output showing the various input file flags:
+## An overview of resilience.py
+resilience.py computes the resilience of a domain name against equally-specific BGP attacks on its webservers and/or DNS nameservers, using the routing simulation results computed with the `pki-topology-simulator` tool (Please refer to the separate [repository](https://github.com/inspire-group/pki-topology-simulator/tree/main)). Running ```python3 resilience.py -h``` (from the code directory; all python commands are intended to be executed from the code directory) gives the help output showing the various input file flags:
 
 ```
 usage: resilience.py [-h] -s SIM_JSON [-S SIM_JSON_RPKI] -l LOOKUP_DIR -o
