@@ -35,6 +35,14 @@ optional arguments:
 
 This flags specify all input files to the resilience calculation framework. Below they are explained in order.
 
+### Preparing data
+Some of the input data to the `resilience.py` script is stored in compressed format. To extract, run the following commands from the `resilience-computation` folder:
+```
+gzip -d data/sim_json/*
+gzip -d data/ocids/*
+gzip -d data/roa/*
+```
+
 ### SIM_JSON
 This is an output of Internet topology simulations, converted to JSON format. We provide two prepackaged simulation outputs, containing simulations from a 10% sample of the 1K randomly selected AS-level attackers presented in our paper, in ```data/sim_json```: ```sim_output_k100_nonrpki.json``` and ```sim_output_k100_rpki.json```.
 
