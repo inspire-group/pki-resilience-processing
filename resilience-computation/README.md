@@ -35,35 +35,27 @@ optional arguments:
 
 This flags specify all input files to the resilience calculation framework. Below they are explained in order.
 
-### Preparing data
-Some of the input data to the `resilience.py` script is stored in compressed format. To extract, run the following commands from the `resilience-computation` folder:
-```
-gzip -d data/sim_json/*
-gzip -d data/ocids/*
-gzip -d data/roa/*
-```
-
 ### SIM_JSON
-This is an output of Internet topology simulations, converted to JSON format. We provide two prepackaged simulation outputs, containing simulations from a 10% sample of the 1K randomly selected AS-level attackers presented in our paper, in ```data/sim_json```: ```sim_output_k100_nonrpki.json``` and ```sim_output_k100_rpki.json```.
+Path of file containing output of Internet topology simulations, converted to JSON format. We provide two prepackaged simulation outputs, containing simulations from a 10% sample of the 1K randomly selected AS-level attackers presented in our paper, in ```data/sim_json```: ```sim_output_k100_nonrpki.json``` and ```sim_output_k100_rpki.json```.
 
 ### SIM_JSON_RPKI
-Similar to SIM_JSON, this is another JSON format-Internet topology simulation output. This argument is needed when performing real-world ROA deployment scenario to resilience calculation: the resilience calculator loads both the non-RPKI and RPKI simulation results, and applies the correct simulation output per IP address depending on the ROA coverage status of the prefix.
+Path of file containing another JSON format-Internet topology simulation output (similar to SIM_JSON); optional. This argument is needed when performing real-world ROA deployment scenario to resilience calculation: the resilience calculator loads both the non-RPKI and RPKI simulation results, and applies the correct simulation output per IP address depending on the ROA coverage status of the prefix.
 
-### LOOKUP_DIR
-Directory path containing CSV-formatted lookup files output from the ```routing-aware-dns``` resolver tool.
+###  LOOKUP_DIR
+Path of directory containing CSV-formatted lookup files output from the ```routing-aware-dns``` resolver tool.
 For the sake of brevity, we provide a file of 10000 domains (randomly sampled from the 1.39M surveyed in our study) and their associated lookups in ```data/domains/lookups_10ksample.txt```.
 
 ### ORIGIN_CLASS_IDS_FILE
-CSV file containing BGP announcement profiles of all prefixes announced on the Internet, based on RIB files from public route collectors.
+Path of CSV file containing BGP announcement profiles of all prefixes announced on the Internet, based on RIB files from public route collectors.
 We provide one file (compiled using BGP monitor data in March 2022) in ```data/ocids/origin-class-ids-2022-03-15.csv```.
 
 ### ROUTINATOR_CSV_FILE
-CSV file of validated ROA payloads (VRPs) for simulating real-world ROA adoption in resilience calculations.
+Path of CSV file of validated ROA payloads (VRPs) for simulating real-world ROA adoption in resilience calculations.
 You can download the latest ROA objects by using the [Routinator tool](https://routinator.docs.nlnetlabs.nl/en/stable/ "for more details"). 
 We provide ROA data from September 15 2023 (the data used in our paper) in ```data/roa/routinator-2022-09-15.csv```.
 
 ### a_records_only
-Boolean flag to indicate whether to consider only webserver IP addresses as the attack surface for BGP hijacks in calculating domain name resilience. 
+Boolean flag indicating whether to consider only webserver IP addresses as the attack surface for BGP hijacks in calculating domain name resilience. 
 ```a_records_only=False``` is a primary point of novelty for the resilience calculation framework.
 
 ### OUTPUT_DIR
@@ -75,6 +67,15 @@ The output is in JSON format of the following schema:
 }
 ```
 The resilience calculator sorts resilience into ```nbins=10000``` by default, to aggregate resilience at 0.01% granularity. The nbins parameter can be tweaked according to user preferences (for example, fewer bins translates to smaller output files).
+
+## Preparing data
+Some of the input data to the `resilience.py` script is stored in compressed format. To extract, run the following commands from the `resilience-computation` folder:
+```
+gzip -d data/sim_json/*
+gzip -d data/ocids/*
+gzip -d data/roa/*
+```
+
 
 ## Running resilience.py
 
