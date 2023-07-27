@@ -89,15 +89,21 @@ Then cd to the code dir:
 
 ```cd code```
 
-Below is an example run command that can be executed from the ```code/``` directory that points to 10K domain subsample included in the default input files, calculates resilience considering the DNS attack surface and real-world RPKI-ROA adoption, and writes output to the ```output``` directory:
+Below is an example run command that can be executed from the ```code/``` directory that points to 10K domain subsample included in the default input files, calculates resilience considering the DNS attack surface and real-world RPKI-ROA adoption, and writes output to the ```output/dns_realworld_rpki``` directory:
 
-```python3 resilience.py -s ../data/sim_json/sim_output_k100_nonrpki.json -S  ../data/sim_json/sim_output_k100_rpki.json -o ../data/ocids/origin-class-ids-2022-03-15.csv -r ../data/roa/routinator-2022-09-15.csv -l ../data/domains/lookups_10ksample.txt -O ../data/output/dns_realworld_rpki ```
+```
+mkdir ../output/dns_realworld_rpki
+python3 resilience.py -s ../data/sim_json/sim_output_k100_nonrpki.json -S  ../data/sim_json/sim_output_k100_rpki.json -o ../data/ocids/origin-class-ids-2022-03-15.csv -r ../data/roa/routinator-2022-09-15.csv -l ../data/domains/ -O ../output/dns_realworld_rpki
+```
 
 This simulation took us approximately 90 minutes on a single-core virtual machine with a recent generation CPU. This version of the script is not multi-threaded so it will not benefit from being run on a cluster/HPC node.
 
 Below is a variant of the command that calculates resilience considering only the webserver attack surface and assuming full RPKI-ROA adoption:
 
-```python3 simulate.py -s ../data/sim_json/sim_output_k100_rpki.json -o ../data/ocids/origin-class-ids-2022-03-15.csv  -l ../data/domains/lookups_10ksample.txtt -O ../data/output/webserver_realworld_rpki```
+```
+mkdir ../output/webserver_realworld_rpki
+python3 simulate.py -s ../data/sim_json/sim_output_k100_rpki.json -o ../data/ocids/origin-class-ids-2022-03-15.csv  -l ../data/domains/ -O ../output/webserver_realworld_rpki
+```
 
 For convenience and comparative purposes, we provide the output of the above two resilience simulations regimes in ```data/output_groundtruth```.
 ## Running analyze_results.py
@@ -105,4 +111,4 @@ This script reads the output of the preceding ```resilience.py```, computes stat
 Analyzing the results typically takes only a few minutes. Results are printed to stdout.
 
 To output analyzed results of the prior DNS + real-world RPKI simulations:
-```python3 analyze_results.py -i ../data/output/dns_realworld_rpki ```
+```python3 analyze_results.py -s ../output/dns_realworld_rpki/<output_file_name> ```
