@@ -204,8 +204,6 @@ for comb_five in vps_choose_five:
 
 quor_pol_names = list(quor_pols_to_run)
 
-print(f'Number of quorum policies to run: {len(quor_pols_to_run)}')
-
 NUMBINS = 10000
 
 
@@ -362,7 +360,6 @@ def worker(in_f, out_f, res_obj, rpki_res_obj, ocid_obj, routinator_obj, adv_cou
                 dns_lkup_info = {}
                 split_line = sline.split(",")
                 full_arecs = True
-                print(f'{split_line[0]} in {in_f}')
                 for i in range(int((len(split_line) - 1) / 5)):
                     vp_nm, a, aaaa, dns_targ_ipsv4, dns_targ_ipsv6 = split_line[i * 5 + 1: (i + 1) * 5 + 1]
                     dns_lkup_info[vp_nm] = (a.split(" "), aaaa, dns_targ_ipsv4.split(" "), dns_targ_ipsv6)
@@ -384,7 +381,7 @@ def worker(in_f, out_f, res_obj, rpki_res_obj, ocid_obj, routinator_obj, adv_cou
 
     print(f'Done parsing DNS lookups for {in_f}')
     reformat_json = {p: (k[0].tolist(), k[1].tolist()) for p, k in policy_res_map.items()}
-    write_gz_json(reformat_json)
+    write_gz_json(out_f, reformat_json)
     print(f'Finished writing to {out_f}')
 
 
@@ -427,10 +424,11 @@ def compute_domain_resilience(args):
     files_to_process = []
     output_files = [] 
     for f in listdir(args.lookup_dir):
-        print(f'Adding file {f}...')
-        output_files.append(join(args.output_dir, f'{f}-res.json.gz'))
+        f_prefix = f[:f.rindex('.')]
+        output_files.append(join(args.output_dir, f'{f_prefix}-res.json.gz'))
         files_to_process.append(join(args.lookup_dir, f))
 
+    print(output_files)
     manager = mp.Manager()
     pool = mp.Pool(min(len(files_to_process), mp.cpu_count()//2))
 
@@ -438,7 +436,6 @@ def compute_domain_resilience(args):
     for i in range(len(files_to_process)):
         job = pool.apply_async(worker, (files_to_process[i], output_files[i], res_obj_dict, rpki_res_obj_dict, ocid_obj, routinator_obj, adv_count, args.a_records_only, count_rpki))
         jobs.append(job)
-        print(f'Added job for {files_to_process[i]}')
 
     for job in jobs:
         job.get()

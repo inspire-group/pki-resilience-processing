@@ -1,18 +1,14 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-##################################################
-
-# Designed to process results from ./summary_from_csv.py -c * | tee ../results.summary.txt
-
 import argparse
-import matplotlib.pyplot as plt
+import gzip
+import json
+import re
+import hist_utils
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    # This is a CAIDA AS topology.
-    parser.add_argument("-s", "--summary_file",
-                        default="data/results.summary.txt")
+    parser.add_argument("-s", "--json_summary_file",
+                        help="JSON output from resilience.py")
     return parser.parse_args()
 
 
@@ -30,74 +26,49 @@ def main(args):
     resultsClasses = []
     resultsClassNames = []
 
-    resultsClasses.append(lambda line: line.startswith("File: 0"))
-    resultsClassNames.append("Single VP")
 
-    resultsClasses.append(lambda line: line.startswith("File: 1"))
-    resultsClassNames.append("Any Two VPs")
+    results_class_names = {
+            "Default Let's Encrypt (n-1)": r'quorumLE',
+            "Full Quorum Let's Encrypt": r'full',
+            "Single VP": r'0_Only-(?P<vp>.+)',
+            "Any Two VPs": r'1_(.+)\+(.+)',
+            "Let's Encrypt +1": r'2_LE\+(.+)',
+            "Let's Encrypt +2": r'3_LE\+(.+)\+(.+)',
+            "Let's Encrypt +2 only EC2": r'3_LE\+(ec2_.+)\+(ec2_.+)',
+            "Let's Encrypt +3": r'4_LE\+(.+)\+(.+)\+(.+)',
+            "Let's Encrypt +3 only EC2": r'4_LE\+(ec2_.+)\+(ec2_.+)\+(ec2_.+)',
+            "Let's Encrypt +3 EC2 and Azure": r'4_LE\+((?!gcp).+)\+((?!gcp).+)\+((?!gcp).+)',
+            "Let's Encrypt +3 EC2 and GCP": r'4_LE\+((?!azure).+)\+((?!azure).+)\+((?!azure).+)',
+            "Full Quorum Let's Encrypt +1": r'5_LE-full\+(.+)',
+            "Full Quorum Let's Encrypt +1 only EC2": r'5_LE-full\+(ec2_.+)',
+            "Full Quorum Let's Encrypt +2": r'6_LE-full\+(.+)\+(.+)',
+            "Full Quorum Let's Encrypt +2 only EC2": r'6_LE-full\+(ec2_.+)\+(ec2_.+)',
+            "Full Quorum Let's Encrypt +2 EC2 and Azure": r'6_LE-full\+((?!gcp).+)\+((?!gcp).+)',
+            "Full Quorum Let's Encrypt +2 EC2 and GCP": r'6_LE-full\+((?!azure).+)\+((?!azure).+)'}
 
-    resultsClasses.append(lambda line: line.startswith("File: quorumLE"))
-    resultsClassNames.append("LE Quorum")
+    results_class_reg = {v: k for k, v in results_class_names.items()}
+    best_results_by_class = {k: (0, 0, "") for k in results_class_names}
 
-    resultsClasses.append(lambda line: line.startswith("File: 2"))
-    resultsClassNames.append("Lets Encrypt + 1")
+    with gzip.open(args.json_summary_file) as f:
+        res_js = json.load(f)
+    for quor_pol_name, res in res_js.items():
+        res_vals, res_bins = res
+        mean = hist_utils.get_mean(*res)
+        med = hist_utils.get_median(*res)
+        for regex in results_class_reg:
+            if re.match(regex, quor_pol_name):
+                pol_type_name = results_class_reg[regex]
+                best_mean, best_median, best_pol = best_results_by_class[pol_type_name]
+                if (med >= best_median) and (mean > best_mean):
+                    best_results_by_class[pol_type_name] = (mean, med, quor_pol_name)
 
-    resultsClasses.append(lambda line: line.startswith("File: 3"))
-    resultsClassNames.append("Lets Encrypt + 2")
 
-    resultsClasses.append(lambda line: line.startswith("File: 3") and line.count("ec2") == 2)
-    resultsClassNames.append("Lets Encrypt + 2 Only EC2")
-
-    resultsClasses.append(lambda line: line.startswith("File: 4"))
-    resultsClassNames.append("Lets Encrypt + 3")
-
-    resultsClasses.append(lambda line: line.startswith("File: 4") and line.count("ec2") == 3)
-    resultsClassNames.append("Lets Encrypt + 3 Only EC2")
-
-    resultsClasses.append(lambda line: line.startswith("File: 4") and not "gcp" in line)
-    resultsClassNames.append("Lets Encrypt + 3 EC2 + Azure")
-
-    resultsClasses.append(lambda line: line.startswith("File: 4") and not "azure" in line)
-    resultsClassNames.append("Lets Encrypt + 3 EC2 + GCP")
-
-    resultsClasses.append(lambda line: line.startswith("File: 5"))
-    resultsClassNames.append("Full Quorum LE + 1")
-
-    resultsClasses.append(lambda line: line.startswith("File: 5") and line.count("ec2") == 1)
-    resultsClassNames.append("Full Quorum LE + 1 Only EC2")
-
-    resultsClasses.append(lambda line: line.startswith("File: 6"))
-    resultsClassNames.append("Full Quorum LE + 2")
-
-    resultsClasses.append(lambda line: line.startswith("File: 6") and line.count("ec2") == 2)
-    resultsClassNames.append("Full Quorum LE + 2 Only EC2")
-
-    resultsClasses.append(lambda line: line.startswith("File: 6") and not "gcp" in line)
-    resultsClassNames.append("Full Quorum LE + 2 EC2 + Azure")
-
-    resultsClasses.append(lambda line: line.startswith("File: 6") and not "azure" in line)
-    resultsClassNames.append("Full Quorum LE + 2 EC2 + GCP")
-
-    resultsClasses.append(lambda line: line.startswith("File: full-"))
-    resultsClassNames.append("Full Quorum LE")
-
-    # Each entry is a running best median and average tuple.
-    runningBestForResultsClass = [(0,0,"")] * len(resultsClasses)
-    for line in open(args.summary_file):
-        sline = line.strip()
-        if sline == "":
-            continue
-        for i in range(len(resultsClasses)):
-            # If the line is included in the results class.
-            if resultsClasses[i](sline):
-                # Compare best based on median alone. Todo: add runing best for average too.
-                median, average = parseLineForMedianAndAverage(sline)
-                if median > runningBestForResultsClass[i][0]:
-                    runningBestForResultsClass[i] = (median, average, getQuorumNameFromLine(sline))
-
-    for i in range(len(resultsClasses)):
-        print(f"{''+ resultsClassNames[i]:<35}, {'Best: ' + str(runningBestForResultsClass[i])}")
-                
+    for res_class, best in best_results_by_class.items():
+        regex = results_class_names[res_class]
+        best_med, best_mean, best_pol = best
+        vps = ", ".join(re.match(results_class_names[res_class], best_pol).groups())
+        print(f"Best config for {res_class}: {vps} (median {best_med}, mean {best_mean}")
+        print()        
 
 if __name__ == '__main__':
     main(parse_args())
