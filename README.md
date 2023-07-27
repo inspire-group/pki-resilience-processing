@@ -1,2 +1,2 @@
 # pki-resilience-processing
-Code to copute the resilience of TLS domains. See resilience-computation/README.md for more.
+Code to compute the resilience of TLS domains. See resilience-computation/README.md for more.
