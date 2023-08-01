@@ -106,9 +106,9 @@ python3 resilience.py -s ../data/sim_json/sim_output_k100_rpki.json -o ../data/o
 ```
 
 For convenience and comparative purposes, we provide the output of the above two resilience simulations regimes in ```data/output_groundtruth```.
-## Running analyze_results.py
+## Running interpret_results.py
 This script reads the output of the preceding ```resilience.py```, computes statistics (median and mean) for each quorum configuration simulated, and outputs the ideal (i.e., highest resilience) deployment for each class of quorum policy/VP count.
 Analyzing the results typically takes only a few minutes. Results are printed to stdout.
 
 To output analyzed results of the prior DNS + real-world RPKI simulations:
-```python3 analyze_results.py -s ../output/dns_realworld_rpki/<output_file_name> ```
+```python3 interpret_results.py -s ../output/dns_realworld_rpki/<output_file_name> ```
